@@ -1,3 +1,5 @@
+import ast
+
 import uvicorn
 from fastapi import FastAPI
 
@@ -11,11 +13,12 @@ app = FastAPI()
 class FileAccept(BaseModel):
     img: str
     size: int
+    point: str
 
 
 @app.post("/upload")
 async def remove_background(file: FileAccept):
-    imgs, scores = remove_background_img(file.size, file.img)
+    imgs, scores = remove_background_img(file.size, file.img, ast.literal_eval(file.point))
 
     res = {
         "main_fig": imgs[-1],

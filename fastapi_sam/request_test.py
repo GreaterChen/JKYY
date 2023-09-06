@@ -9,7 +9,8 @@ url = "http://localhost:8001/upload"  # 接口 URL
 with open('../input/truck.jpg', 'rb') as file:
     pic_base64 = base64.b64encode(file.read())
     files = {'img': str(pic_base64, encoding='utf-8'),
-             "size": 500}
+             "size": 500,
+             "point": "(900,600)"}
     response = requests.post(url, json.dumps(files))
 
 # 检查响应状态码

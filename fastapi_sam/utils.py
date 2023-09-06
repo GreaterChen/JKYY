@@ -21,20 +21,7 @@ def get_img_data(img):
     return image
 
 
-def show_mask(mask, ax, random_color=False):
-    if random_color:
-        color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
-    else:
-        color = np.array([30 / 255, 144 / 255, 255 / 255, 0.6])
-    mask = ~mask
-    h, w = mask.shape[-2:]
-
-    mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
-
-    ax.imshow(mask_image)
-
-
-def remove_background_img(size, img):
+def remove_background_img(size, img, point):
     sam = sam_model_registry["vit_h"](checkpoint="../checkpoint/sam_vit_h_4b8939.pth")
     sam.to(device="cuda")
     predictor = SamPredictor(sam)
@@ -42,8 +29,8 @@ def remove_background_img(size, img):
     image = cv2.cvtColor(pil2np(content), cv2.COLOR_BGR2RGB)
 
     predictor.set_image(image)
-
-    input_point = np.array([[image.shape[0] // 2, image.shape[0] // 2]])
+    x, y = point
+    input_point = np.array([[x, y]])
     input_label = np.array([1])
 
     masks, scores, logits = predictor.predict(
