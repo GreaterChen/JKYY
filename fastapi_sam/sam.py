@@ -11,14 +11,15 @@ app = FastAPI()
 
 
 class FileAccept(BaseModel):
-    img: str
-    size: int
-    point: str
+    img: str    # base64 or url
+    size: int   # size of output image
+    include_points: list    # 图像分割部分包含的点
 
 
 @app.post("/upload")
 async def remove_background(file: FileAccept):
-    imgs, scores = remove_background_img(file.size, file.img, ast.literal_eval(file.point))
+    imgs, scores = remove_background_img(file.size, file.img, file.include_points)
+    print(scores)
 
     res = {
         "main_fig": imgs[-1],

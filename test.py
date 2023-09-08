@@ -5,10 +5,9 @@ import os
 
 import numpy as np
 from matplotlib import pyplot as plt
-from numpy import argmax
 
 from image_type import pil2np
-from utils import get_img_data
+from fastapi_sam.utils import get_img_data
 from segment_anything import sam_model_registry, SamPredictor
 
 
@@ -49,8 +48,8 @@ content = get_img_data(pic_base64)
 image = cv2.cvtColor(pil2np(content), cv2.COLOR_BGR2RGB)
 predictor.set_image(image)
 
-input_point = np.array([[500, 375]])
-input_label = np.array([1])
+input_point = np.array([[500, 375], [1125, 625]])
+input_label = np.array([1, 1])
 
 masks, scores, logits = predictor.predict(
     point_coords=input_point,
@@ -59,11 +58,11 @@ masks, scores, logits = predictor.predict(
 )
 
 for i, (mask, score) in enumerate(zip(masks, scores)):
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(10,10))
     plt.imshow(image)
     show_mask(mask, plt.gca())
     show_points(input_point, input_label, plt.gca())
-    plt.title(f"Mask {i + 1}, Score: {score:.3f}", fontsize=18)
+    plt.title(f"Mask {i+1}, Score: {score:.3f}", fontsize=18)
     plt.axis('off')
     plt.show()
 
@@ -78,31 +77,3 @@ for i, (mask, score) in enumerate(zip(masks, scores)):
     plt.savefig('res-{}.png'.format(i + 1))
     plt.show()
 
-
-# best_mask = masks[np.argmax(scores)]
-# best_score = np.max(scores)
-#
-# plt.figure(figsize=(10,10))
-# plt.imshow(image)
-# show_points(input_point, input_label, plt.gca())
-# plt.axis('on')
-# plt.show()
-#
-#
-# plt.figure(figsize=(10,10))
-# plt.imshow(image)
-# show_mask(best_mask, plt.gca())
-# show_points(input_point, input_label, plt.gca())
-# plt.title(f"Score: {best_score:.3f}", fontsize=18)
-# plt.axis('off')
-# plt.show()
-#
-# best_mask = ~best_mask
-# best_mask = best_mask + 255
-# best_mask = np.repeat(best_mask[:, :, np.newaxis], 3, axis=2)
-# best_mask = best_mask.astype(np.uint8)
-# res = cv2.bitwise_and(image, best_mask)
-# res[res == 0] = 255
-# plt.imshow(res)
-# plt.savefig('res.png')
-# plt.show()
