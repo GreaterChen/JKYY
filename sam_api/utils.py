@@ -97,10 +97,6 @@ def remove_background_img_sam(size, img, include_point, exclude_point, include_a
 
         white_pixels = np.ones_like(image) * 255
         white_pixels *= np.expand_dims(np.logical_not(mask), axis=-1)
-        test = Image.fromarray(original_pixels)
-        test2 = Image.fromarray(white_pixels)
-        test.show()
-        test2.show()
         result = original_pixels + white_pixels
 
         # 进行裁剪

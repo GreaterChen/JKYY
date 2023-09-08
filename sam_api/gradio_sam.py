@@ -124,13 +124,14 @@ def download_img(size, user_data):
     if user_data['output_img'] is None:
         return None
 
-    h, w = pil2np(user_data['output_img']).shape[:2]
-    # scale = min(size / h, size / w)
-    #
-    # resh, resw = int(scale * h), int(scale * w)
-    # res_img = cv2.resize(user_data['output_img'], (resw, resh))
+    user_data['output_img'] = pil2np(user_data['output_img'])
+    h, w = user_data['output_img'].shape[:2]
+    scale = min(size / h, size / w)
 
-    return pil2np(user_data['output_img'])
+    resh, resw = int(scale * h), int(scale * w)
+    res_img = cv2.resize(user_data['output_img'], (resw, resh))
+
+    return res_img
 
 
 def remove_background_img(user_data):
@@ -149,7 +150,7 @@ def remove_background_img(user_data):
     output = base642pil(output)
 
     user_data['output_img'] = output
-    return download_img(user_data['size'], user_data)
+    return download_img(None, user_data)
 
 
 with gr.Blocks() as demo:
