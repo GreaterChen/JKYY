@@ -51,7 +51,8 @@ def remove_background_img_sam(size, img, include_point, exclude_point, include_a
     sam.to(device="cuda")
     predictor = SamPredictor(sam)
     content = get_img_data(img)
-    image = cv2.cvtColor(pil2np(content), cv2.COLOR_BGR2RGB)
+    # image = cv2.cvtColor(pil2np(content), cv2.COLOR_BGR2RGB)
+    image = pil2np(content)
     predictor.set_image(image)
 
     input_point = []
@@ -90,11 +91,16 @@ def remove_background_img_sam(size, img, include_point, exclude_point, include_a
 
     imgs = []
     for i, (mask, score) in enumerate(zip(masks, scores)):
+        if i != 3:
+            continue
         original_pixels = image * np.expand_dims(mask, axis=-1)
 
         white_pixels = np.ones_like(image) * 255
         white_pixels *= np.expand_dims(np.logical_not(mask), axis=-1)
-
+        test = Image.fromarray(original_pixels)
+        test2 = Image.fromarray(white_pixels)
+        test.show()
+        test2.show()
         result = original_pixels + white_pixels
 
         # 进行裁剪

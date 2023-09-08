@@ -250,7 +250,7 @@ with gr.Blocks() as demo:
     )
 
 if __name__ == '__main__':
-    demo.queue().launch(share=True, inbrowser=True,
+    demo.queue().launch(share=False, inbrowser=True,
                         server_name="127.0.0.1",
                         server_port=18401
                         # root_path="/HeadView/Web"
