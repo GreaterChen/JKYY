@@ -31,7 +31,15 @@ def show_points(coords, labels, ax, marker_size=375):
                linewidth=1.25)
 
 
-def remove_background_img(size, img, point):
+def remove_background_img(size, img, include_point,exclude_point):
+    """
+    完成抠图
+    @param size: 输出图像尺寸
+    @param img: 输出图像base64
+    @param include_point: 包含的点
+    @param exclude_point: 不包含的点
+    @return: 抠图后的图像
+    """
     sam = sam_model_registry["vit_h"](checkpoint="../checkpoint/sam_vit_h_4b8939.pth")
     sam.to(device="cuda")
     predictor = SamPredictor(sam)
@@ -41,9 +49,13 @@ def remove_background_img(size, img, point):
     predictor.set_image(image)
     input_point = []
     input_label = []
-    for x, y in point:
+    for x, y in include_point:
         input_point.append([x, y])
         input_label.append(1)
+
+    for x, y in exclude_point:
+        input_point.append([x, y])
+        input_label.append(0)
 
     plt.figure(figsize=(10, 10))
     plt.imshow(image)
