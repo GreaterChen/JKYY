@@ -71,14 +71,14 @@ def remove_background_img_sam(size, img, include_point, exclude_point, include_a
     masks, scores, logits = predictor.predict(
         point_coords=input_point,
         point_labels=input_label,
-        box=include_area[None, :],
+        # box=include_area[None, :],
         multimask_output=True,
     )
 
     # 测试时展示选定点和区域
     plt.figure(figsize=(10, 10))
     plt.imshow(image)
-    show_box(include_area, plt.gca())
+    # show_box(include_area, plt.gca())
     show_points(input_point, input_label, plt.gca())
     plt.axis('off')
     plt.show()
@@ -88,7 +88,7 @@ def remove_background_img_sam(size, img, include_point, exclude_point, include_a
     masks = np.concatenate((masks, sum_mask[np.newaxis, :, :]), axis=0)
     scores = np.append(scores, 0)
 
-    sub_imgs = []
+    imgs = []
     for i, (mask, score) in enumerate(zip(masks, scores)):
         original_pixels = image * np.expand_dims(mask, axis=-1)
 
@@ -103,10 +103,10 @@ def remove_background_img_sam(size, img, include_point, exclude_point, include_a
         scale = min(size / h, size / w)
         resh, resw = int(scale * h), int(scale * w)
         res_img = removed_img.resize((resw, resh))
-        res_img.show()
+        # res_img.show()
 
         # 转base64
         pic_base64 = pil2base64(res_img)
-        sub_imgs.append(pic_base64)
+        imgs.append(pic_base64)
 
-    return sub_imgs, scores
+    return imgs, scores

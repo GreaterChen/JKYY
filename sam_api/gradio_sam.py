@@ -5,7 +5,8 @@ import numpy as np
 import gradio as gr
 import rembg
 import warnings
-from image_type import np2pil, pil2np
+from image_type import np2pil, pil2np, base642pil, pil2base64
+from sam_api.utils import remove_background_img_sam
 
 warnings.filterwarnings("ignore")
 IMG_MAX_SIZE = 500
@@ -18,8 +19,8 @@ def get_preview(img):
     res_w = int(w * scale)
     res_h = int(h * scale)
 
-    res_img = cv2.resize(img, (res_w, res_h))
-
+    # res_img = cv2.resize(img, (res_w, res_h))
+    res_img = img
     return res_img
 
 
@@ -29,7 +30,9 @@ def input(img, user_data):
     user_data['tmp_img'] = img
     user_data['output_img'] = img
     user_data['include_points'] = []
-
+    user_data['exclude_points'] = []
+    user_data['include_area'] = []
+    user_data['size'] = IMG_MAX_SIZE
     if user_data['input_img'] is None:
         return None
 
@@ -41,6 +44,10 @@ def clear(user_data):
     user_data['input_img'] = None
     user_data['tmp_img'] = None
     user_data['output_img'] = None
+    user_data['include_points'] = None
+    user_data['exclude_points'] = None
+    user_data['include_area'] = None
+    user_data['size'] = 500
     return None
 
 
@@ -101,6 +108,13 @@ def get_point(evt: gr.SelectData, user_data):
     return user_data['include_points']
 
 
+def undo_point(user_data):
+    if user_data['input_img'] is None:
+        return None
+    user_data['include_points'] = user_data['include_points'][:-1]
+    return user_data['include_points']
+
+
 def download_img(size, user_data):
     try:
         size = int(size)
@@ -110,71 +124,43 @@ def download_img(size, user_data):
     if user_data['output_img'] is None:
         return None
 
-    h, w = user_data['output_img'].shape[:2]
-    scale = min(size / h, size / w)
+    h, w = pil2np(user_data['output_img']).shape[:2]
+    # scale = min(size / h, size / w)
+    #
+    # resh, resw = int(scale * h), int(scale * w)
+    # res_img = cv2.resize(user_data['output_img'], (resw, resh))
 
-    resh, resw = int(scale * h), int(scale * w)
-    res_img = cv2.resize(user_data['output_img'], (resw, resh))
-
-    return res_img
+    return pil2np(user_data['output_img'])
 
 
-def remove_background_img(output_size, user_data):
+def remove_background_img(user_data):
     if user_data['tmp_img'] is None:
         return None
 
-    img = np2pil(user_data['tmp_img'])
-    # img = user_data['tmp_img']
-    output = rembg.remove(
-        img
+    output, scores = remove_background_img_sam(
+        user_data['size'],
+        pil2base64(np2pil(user_data['tmp_img'])),
+        user_data['include_points'],
+        user_data['exclude_points'],
+        user_data['include_area']
     )
-    output = pil2np(output)
+    output = output[-1]
 
-    output_cv = cv2.cvtColor(output, cv2.COLOR_RGBA2BGRA)
-    r, g, b, a = cv2.split(output_cv)
-
-    _, mask = cv2.threshold(a, 127, 255, cv2.THRESH_BINARY)
-
-    contous, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-    if len(contous) == 0:
-        return output
-
-    box_list = []
-    area_list = []
-    for cont in contous:
-        x, y, w, h = cv2.boundingRect(cont)
-        box_list.append([x, y, w, h])
-        area_list.append(w * h)
-
-    max_box = box_list[np.argmax(area_list)]
-    x, y, w, h = max_box
-    cx, cy = x + w / 2, y + h / 2
-    nw, nh = w * 1.1, h * 1.1
-    nx1, ny1 = math.ceil(cx - nw / 2), math.ceil(cy - nh / 2)
-    nx2, ny2 = math.ceil(cx + nw / 2), math.ceil(cy + nh / 2)
-
-    cut_img = output_cv[ny1:ny2, nx1:nx2]
-    if cut_img.shape[0] > cut_img.shape[1]:
-        top = bottom = cut_img.shape[0] // 4
-        left = right = (cut_img.shape[0] + top + bottom - cut_img.shape[1]) // 2
-    else:
-        left = right = cut_img.shape[1] // 4
-        top = bottom = (cut_img.shape[1] + left + right - cut_img.shape[0]) // 2
-
-    output_img = cv2.copyMakeBorder(cut_img, top, bottom, left, right, cv2.BORDER_CONSTANT, (0, 0, 0, 0))
-    output = cv2.cvtColor(output_img, cv2.COLOR_BGRA2RGBA)
+    output = base642pil(output)
 
     user_data['output_img'] = output
-    return download_img(output_size, user_data)
+    return download_img(user_data['size'], user_data)
 
 
 with gr.Blocks() as demo:
     user_data = {"origin_img": None,
                  "input_img": None,
                  "include_points": None,
+                 "exclude_points": None,
+                 "include_area": None,
                  "tmp_img": None,
-                 "output_img": None
+                 "output_img": None,
+                 "size": None
                  }
 
     stats = gr.State(user_data)
@@ -185,7 +171,10 @@ with gr.Blocks() as demo:
                 with gr.Row():
                     input_img = gr.Image(label='输入图像')
                 with gr.Row():
-                    statement = gr.Textbox(label="包含的点")
+                    with gr.Column():
+                        statement = gr.Textbox(label="包含的点")
+                    with gr.Column():
+                        reset_point = gr.Button(value="撤销选点")
                 with gr.Row():
                     with gr.Column():
                         reset = gr.Button(value='重置')
@@ -230,6 +219,12 @@ with gr.Blocks() as demo:
         [input_img, angle]
     )
 
+    reset_point.click(
+        undo_point,
+        [stats],
+        [statement]
+    )
+
     flip.click(
         flip_img,
         [angle, stats],
@@ -244,8 +239,8 @@ with gr.Blocks() as demo:
 
     submit.click(
         remove_background_img,
-        [dw_size, stats],
-        output_img
+        [stats],
+        [output_img]
     )
 
     dw_size.change(
@@ -255,7 +250,7 @@ with gr.Blocks() as demo:
     )
 
 if __name__ == '__main__':
-    demo.queue().launch(share=False, inbrowser=True,
+    demo.queue().launch(share=True, inbrowser=True,
                         server_name="127.0.0.1",
                         server_port=18401
                         # root_path="/HeadView/Web"
