@@ -7,7 +7,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from image_type import pil2np
-from fastapi_sam.utils import get_img_data
+from sam_api.utils import get_img_data
 from segment_anything import sam_model_registry, SamPredictor
 
 

@@ -37,7 +37,7 @@ def show_box(box, ax):
     ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0, 0, 0, 0), lw=2))
 
 
-def remove_background_img(size, img, include_point, exclude_point, include_area):
+def remove_background_img_sam(size, img, include_point, exclude_point, include_area):
     """
     完成抠图
     @param size: 输出图像尺寸
