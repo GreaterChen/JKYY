@@ -14,6 +14,7 @@ IMG_MAX_SIZE = 500
 
 
 def get_preview(img):
+    # 在此裁剪会导致选点不准，如果想裁剪需要对点再进行同步偏移
     global IMG_MAX_SIZE
     h, w = img.shape[:2]
     scale = min(IMG_MAX_SIZE / w, IMG_MAX_SIZE / h)
@@ -115,10 +116,14 @@ def get_point(evt: gr.SelectData, user_data, mode):
     img = user_data['input_img'].copy()
     if mode:
         user_data['exclude_points'].append(evt.index)
+        cv2.circle(img, evt.index, 5, (0, 0, 255), -1)
     else:
         user_data['include_points'].append(evt.index)
+        cv2.circle(img, evt.index, 5, (255, 0, 0), -1)
 
-    return user_data['include_points'], user_data['exclude_points']
+    user_data['input_img'] = img
+
+    return user_data['input_img'], user_data['include_points'], user_data['exclude_points']
 
 
 def download_img(size, user_data):
@@ -231,7 +236,7 @@ with gr.Blocks() as demo:
     input_img.select(
         get_point,
         [stats, mode],
-        [include, exclude]
+        [input_img, include, exclude]
     )
 
     reset.click(
