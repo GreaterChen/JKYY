@@ -24,21 +24,6 @@ def get_img_data(img):
     return pil2np(image)
 
 
-def show_points(coords, labels, ax, marker_size=375):
-    pos_points = coords[labels == 1]
-    neg_points = coords[labels == 0]
-    ax.scatter(pos_points[:, 0], pos_points[:, 1], color='blue', marker='*', s=marker_size, edgecolor='white',
-               linewidth=1.25)
-    ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='*', s=marker_size, edgecolor='white',
-               linewidth=1.25)
-
-
-def show_box(box, ax):
-    x0, y0 = box[0], box[1]
-    w, h = box[2] - box[0], box[3] - box[1]
-    ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0, 0, 0, 0), lw=2))
-
-
 def crop_non_white_region(image):
     """
     将图片裁剪出来
@@ -62,26 +47,29 @@ def crop_non_white_region(image):
                 bottom = max(bottom, y)
 
     # 分割出非白色区域
-    delta = 10
-    cropped_image = image.crop((left + delta, top + delta, right + delta, bottom + delta))
+    delta = 0
+    cropped_image = image.crop((left - delta, top - delta, right + delta, bottom + delta))
 
     return pil2np(cropped_image)
 
 
 def download_img(imgs, size):
+    imgs_base64 = []
     for i in range(len(imgs)):
-        imgs[i] = crop_non_white_region(np2pil(imgs[i]))
+        imgs[i] = crop_non_white_region(base642pil(imgs[i]))
         h, w = imgs[i].shape[:2]
         scale = min(size / h, size / w)
         resh, resw = int(scale * h), int(scale * w)
         imgs[i] = cv2.resize(imgs[i], (resw, resh))
-    return imgs
+        imgs_base64.append(pil2base64(np2pil(imgs[i])))
+
+    return imgs_base64
 
 
 def remove_background_img_sam(img, include_point, exclude_point, include_area):
     """
     完成抠图
-    @param img: 输出图像base64
+    @param img: 输入图像
     @param include_point: 包含的点
     @param exclude_point: 不包含的点
     @param include_area: 矩形框定范围
@@ -114,14 +102,6 @@ def remove_background_img_sam(img, include_point, exclude_point, include_area):
         # box=include_area[None, :],
         multimask_output=True,
     )
-
-    # 测试时展示选定点和区域
-    plt.figure(figsize=(10, 10))
-    plt.imshow(image)
-    # show_box(include_area, plt.gca())
-    show_points(input_point, input_label, plt.gca())
-    plt.axis('off')
-    plt.show()
 
     # 添加总图
     sum_mask = np.logical_or.reduce(masks, axis=0)

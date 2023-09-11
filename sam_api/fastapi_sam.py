@@ -23,7 +23,7 @@ async def remove_background(file: FileAccept):
     imgs, scores = remove_background_img_sam(file.img, file.include_points, file.exclude_points,
                                              file.include_area)
 
-    imgs = download_img(imgs,file.size)
+    imgs = download_img(imgs, file.size)
     res = {
         "main_fig": imgs[-1],
         "sub_figs": [
