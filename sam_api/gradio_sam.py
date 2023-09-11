@@ -100,15 +100,23 @@ def rotate_img(angle, user_data):
     return get_preview(user_data['tmp_img'])
 
 
-def get_point(evt: gr.SelectData, user_data):
+def mode_change(check_box, mode):
+    mode = check_box
+    return mode
+
+
+def get_point(evt: gr.SelectData, user_data, mode):
     if user_data['input_img'] is None:
         return None
 
     img = user_data['input_img'].copy()
+    if mode:
+        user_data['exclude_points'].append(evt.index)
+    else:
+        user_data['include_points'].append(evt.index)
 
-    user_data['include_points'].append(evt.index)
 
-    return user_data['include_points']
+    return user_data['include_points'], user_data['exclude_points']
 
 
 def download_img(size, user_data):
@@ -159,13 +167,17 @@ with gr.Blocks() as demo:
                  "size": None
                  }
 
+    mode = False
     stats = gr.State(user_data)
+    mode = gr.State(mode)
 
     with gr.Row():
         with gr.Column():
             with gr.Box():
                 with gr.Row():
                     input_img = gr.Image(label='输入图像')
+                with gr.Row():
+                    in_or_ex = gr.Checkbox(label="选择不包含的点")
                 with gr.Row():
                     with gr.Column():
                         include = gr.Textbox(label="包含的点")
@@ -216,8 +228,8 @@ with gr.Blocks() as demo:
 
     input_img.select(
         get_point,
-        [stats],
-        include
+        [stats, mode],
+        [include, exclude]
     )
 
     reset.click(
@@ -248,6 +260,12 @@ with gr.Blocks() as demo:
         download_img,
         [dw_size, stats],
         output_img
+    )
+
+    in_or_ex.change(
+        mode_change,
+        [in_or_ex, mode],
+        mode
     )
 
 if __name__ == '__main__':
