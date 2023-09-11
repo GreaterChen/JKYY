@@ -5,6 +5,9 @@ import numpy as np
 import gradio as gr
 import rembg
 import warnings
+
+from PIL.Image import Image
+
 from image_type import np2pil, pil2np, base642pil, pil2base64
 from sam_api.utils import remove_background_img_sam
 
@@ -120,6 +123,29 @@ def get_point(evt: gr.SelectData, user_data, mode):
     return user_data['include_points'], user_data['exclude_points']
 
 
+def crop_non_white_region(image):
+    width, height = image.size
+    # 获取图像数据
+    pixels = image.load()
+    # 计算非白色像素的边界框
+    left, top, right, bottom = width, height, 0, 0
+
+    for x in range(width):
+        for y in range(height):
+            # 判断像素是否为白色
+            if pixels[x, y] != (255, 255, 255):
+                # 更新边界框
+                left = min(left, x)
+                top = min(top, y)
+                right = max(right, x)
+                bottom = max(bottom, y)
+
+    # 分割出非白色区域
+    cropped_image = image.crop((left, top, right, bottom))
+
+    return pil2np(cropped_image)
+
+
 def download_img(size, user_data):
     try:
         size = int(size)
@@ -130,11 +156,12 @@ def download_img(size, user_data):
         return None
 
     imgs = user_data['output_img']
-    h, w = imgs[0].shape[:2]
-    scale = min(size / h, size / w)
-    resh, resw = int(scale * h), int(scale * w)
-
+    print(imgs[0].shape)
     for i in range(len(imgs)):
+        imgs[i] = crop_non_white_region(np2pil(imgs[i]))
+        h, w = imgs[i].shape[:2]
+        scale = min(size / h, size / w)
+        resh, resw = int(scale * h), int(scale * w)
         imgs[i] = cv2.resize(imgs[i], (resw, resh))
 
     return imgs[-1], imgs[0], imgs[1], imgs[2]
@@ -218,7 +245,7 @@ with gr.Blocks() as demo:
     input_img.upload(
         input,
         [input_img, stats],
-        [input_img,include,exclude,angle]
+        [input_img, include, exclude, angle]
     )
 
     input_img.clear(
