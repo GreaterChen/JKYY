@@ -57,8 +57,10 @@ def reset_img(user_data):
 
     user_data['input_img'] = user_data['origin_img']
     user_data['tmp_img'] = user_data['origin_img']
+    user_data['include_points'] = []
+    user_data['exclude_points'] = []
 
-    return get_preview(user_data['input_img']), 0
+    return get_preview(user_data['input_img']), 0, [], []
 
 
 def flip_img(tmp_img_angle, user_data):
@@ -114,7 +116,6 @@ def get_point(evt: gr.SelectData, user_data, mode):
         user_data['exclude_points'].append(evt.index)
     else:
         user_data['include_points'].append(evt.index)
-
 
     return user_data['include_points'], user_data['exclude_points']
 
@@ -235,7 +236,7 @@ with gr.Blocks() as demo:
     reset.click(
         reset_img,
         [stats],
-        [input_img, angle]
+        [input_img, angle, include, exclude]
     )
 
     flip.click(
