@@ -5,7 +5,7 @@ from fastapi import FastAPI
 
 from pydantic import BaseModel
 
-from utils import remove_background_img_sam
+from utils import remove_background_img_sam, download_img
 
 app = FastAPI()
 
@@ -20,8 +20,10 @@ class FileAccept(BaseModel):
 
 @app.post("/upload")
 async def remove_background(file: FileAccept):
-    imgs, scores = remove_background_img_sam(file.size, file.img, file.include_points, file.exclude_points,
+    imgs, scores = remove_background_img_sam(file.img, file.include_points, file.exclude_points,
                                              file.include_area)
+
+    imgs = download_img(imgs,file.size)
     res = {
         "main_fig": imgs[-1],
         "sub_figs": [

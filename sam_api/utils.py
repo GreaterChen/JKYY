@@ -39,10 +39,48 @@ def show_box(box, ax):
     ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0, 0, 0, 0), lw=2))
 
 
-def remove_background_img_sam(size, img, include_point, exclude_point, include_area):
+def crop_non_white_region(image):
+    """
+    将图片裁剪出来
+    @param image: PIL格式
+    @return: ndarray格式裁剪后图片
+    """
+    width, height = image.size
+    # 获取图像数据
+    pixels = image.load()
+    # 计算非白色像素的边界框
+    left, top, right, bottom = width, height, 0, 0
+
+    for x in range(width):
+        for y in range(height):
+            # 判断像素是否为白色
+            if pixels[x, y] != (255, 255, 255):
+                # 更新边界框
+                left = min(left, x)
+                top = min(top, y)
+                right = max(right, x)
+                bottom = max(bottom, y)
+
+    # 分割出非白色区域
+    delta = 10
+    cropped_image = image.crop((left + delta, top + delta, right + delta, bottom + delta))
+
+    return pil2np(cropped_image)
+
+
+def download_img(imgs, size):
+    for i in range(len(imgs)):
+        imgs[i] = crop_non_white_region(np2pil(imgs[i]))
+        h, w = imgs[i].shape[:2]
+        scale = min(size / h, size / w)
+        resh, resw = int(scale * h), int(scale * w)
+        imgs[i] = cv2.resize(imgs[i], (resw, resh))
+    return imgs
+
+
+def remove_background_img_sam(img, include_point, exclude_point, include_area):
     """
     完成抠图
-    @param size: 输出图像尺寸
     @param img: 输出图像base64
     @param include_point: 包含的点
     @param exclude_point: 不包含的点
@@ -98,16 +136,9 @@ def remove_background_img_sam(size, img, include_point, exclude_point, include_a
         white_pixels *= np.expand_dims(np.logical_not(mask), axis=-1)
         result = original_pixels + white_pixels
 
-        # 进行裁剪
         removed_img = Image.fromarray(result)
-        h, w = image.shape[:2]
-        scale = min(size / h, size / w)
-        resh, resw = int(scale * h), int(scale * w)
-        res_img = removed_img.resize((resw, resh))
-        # res_img.show()
-
         # 转base64
-        pic_base64 = pil2base64(res_img)
+        pic_base64 = pil2base64(removed_img)
         imgs.append(pic_base64)
 
     return imgs, scores
