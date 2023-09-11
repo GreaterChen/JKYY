@@ -78,8 +78,9 @@ def flip_img(tmp_img_angle, user_data):
     M[0, 2] += (new_w - w) / 2
     M[1, 2] += (new_h - h) / 2
     user_data['tmp_img'] = cv2.warpAffine(img, M, (new_w, new_h))
+    user_data['input_img'] = user_data['tmp_img']
 
-    return get_preview(user_data['tmp_img'])
+    return get_preview(user_data['input_img'])
 
 
 def rotate_img(angle, user_data):
@@ -108,10 +109,10 @@ def get_point(evt: gr.SelectData, user_data):
     return user_data['include_points']
 
 
-def undo_point(user_data):
+def resetp(user_data):
     if user_data['input_img'] is None:
         return None
-    user_data['include_points'] = user_data['include_points'][:-1]
+    user_data['include_points'].clear()
     return user_data['include_points']
 
 
@@ -135,12 +136,12 @@ def download_img(size, user_data):
 
 
 def remove_background_img(user_data):
-    if user_data['tmp_img'] is None:
+    if user_data['input_img'] is None:
         return None
 
     output, scores = remove_background_img_sam(
         user_data['size'],
-        pil2base64(np2pil(user_data['tmp_img'])),
+        pil2base64(np2pil(user_data['input_img'])),
         user_data['include_points'],
         user_data['exclude_points'],
         user_data['include_area']
@@ -175,7 +176,8 @@ with gr.Blocks() as demo:
                     with gr.Column():
                         statement = gr.Textbox(label="包含的点")
                     with gr.Column():
-                        reset_point = gr.Button(value="撤销选点")
+                        with gr.Row():
+                            reset_point = gr.Button(value="重置选点")
                 with gr.Row():
                     with gr.Column():
                         reset = gr.Button(value='重置')
@@ -221,7 +223,7 @@ with gr.Blocks() as demo:
     )
 
     reset_point.click(
-        undo_point,
+        resetp,
         [stats],
         [statement]
     )
@@ -256,3 +258,4 @@ if __name__ == '__main__':
                         server_port=18401
                         # root_path="/HeadView/Web"
                         )
+
