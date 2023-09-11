@@ -47,7 +47,7 @@ def remove_background_img_sam(size, img, include_point, exclude_point, include_a
     @param include_area: 矩形框定范围
     @return: 抠图后的图像
     """
-    sam = sam_model_registry["vit_h"](checkpoint="../checkpoint/sam_vit_h_4b8939.pth")
+    sam = sam_model_registry["vit_b"](checkpoint="../checkpoint/sam_vit_b_01ec64.pth")
     sam.to(device="cuda")
     predictor = SamPredictor(sam)
     content = get_img_data(img)
@@ -91,8 +91,6 @@ def remove_background_img_sam(size, img, include_point, exclude_point, include_a
 
     imgs = []
     for i, (mask, score) in enumerate(zip(masks, scores)):
-        if i != 3:
-            continue
         original_pixels = image * np.expand_dims(mask, axis=-1)
 
         white_pixels = np.ones_like(image) * 255

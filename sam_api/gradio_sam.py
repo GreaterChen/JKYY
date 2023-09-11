@@ -78,9 +78,8 @@ def flip_img(tmp_img_angle, user_data):
     M[0, 2] += (new_w - w) / 2
     M[1, 2] += (new_h - h) / 2
     user_data['tmp_img'] = cv2.warpAffine(img, M, (new_w, new_h))
-    user_data['input_img'] = user_data['tmp_img']
 
-    return get_preview(user_data['input_img'])
+    return get_preview(user_data['tmp_img'])
 
 
 def rotate_img(angle, user_data):
@@ -104,15 +103,11 @@ def rotate_img(angle, user_data):
 def get_point(evt: gr.SelectData, user_data):
     if user_data['input_img'] is None:
         return None
+
+    img = user_data['input_img'].copy()
+
     user_data['include_points'].append(evt.index)
 
-    return user_data['include_points']
-
-
-def resetp(user_data):
-    if user_data['input_img'] is None:
-        return None
-    user_data['include_points'].clear()
     return user_data['include_points']
 
 
@@ -125,30 +120,30 @@ def download_img(size, user_data):
     if user_data['output_img'] is None:
         return None
 
-    user_data['output_img'] = pil2np(user_data['output_img'])
-    h, w = user_data['output_img'].shape[:2]
+    imgs = user_data['output_img']
+    h, w = imgs[0].shape[:2]
     scale = min(size / h, size / w)
-
     resh, resw = int(scale * h), int(scale * w)
-    res_img = cv2.resize(user_data['output_img'], (resw, resh))
 
-    return res_img
+    for i in range(len(imgs)):
+        imgs[i] = cv2.resize(imgs[i], (resw, resh))
+
+    return imgs[-1], imgs[0], imgs[1], imgs[2]
 
 
 def remove_background_img(user_data):
-    if user_data['input_img'] is None:
+    if user_data['tmp_img'] is None:
         return None
-
     output, scores = remove_background_img_sam(
         user_data['size'],
-        pil2base64(np2pil(user_data['input_img'])),
+        pil2base64(np2pil(user_data['tmp_img'])),
         user_data['include_points'],
         user_data['exclude_points'],
         user_data['include_area']
     )
-    output = output[-1]
-
-    output = base642pil(output)
+    print(len(output))
+    for i in range(len(output)):
+        output[i] = pil2np(base642pil(output[i]))
 
     user_data['output_img'] = output
     return download_img(None, user_data)
@@ -174,10 +169,9 @@ with gr.Blocks() as demo:
                     input_img = gr.Image(label='输入图像')
                 with gr.Row():
                     with gr.Column():
-                        statement = gr.Textbox(label="包含的点")
+                        include = gr.Textbox(label="包含的点")
                     with gr.Column():
-                        with gr.Row():
-                            reset_point = gr.Button(value="重置选点")
+                        exclude = gr.Textbox(label="不包含的点")
                 with gr.Row():
                     with gr.Column():
                         reset = gr.Button(value='重置')
@@ -190,12 +184,23 @@ with gr.Blocks() as demo:
         with gr.Column():
             with gr.Box():
                 with gr.Row():
-                    output_img = gr.Image(label='输出图像')
+                    with gr.Column():
+                        output_img = gr.Image(label='输出图像1')
                 with gr.Row():
                     dw_size = gr.Dropdown(
                         [str(500), str(800), str(1000), str(1500), str(2000)],
                         label="输出尺寸 (n x n), 默认500"
                     )
+    with gr.Row():
+        with gr.Column():
+            with gr.Box():
+                with gr.Row():
+                    with gr.Column():
+                        output_img2 = gr.Image(label='输出图像1')
+                    with gr.Column():
+                        output_img3 = gr.Image(label='输出图像2')
+                    with gr.Column():
+                        output_img4 = gr.Image(label='输出图像3')
 
     # Func >>>>>>>>>>>>>>>>>>>>>>>
     input_img.upload(
@@ -213,19 +218,13 @@ with gr.Blocks() as demo:
     input_img.select(
         get_point,
         [stats],
-        statement
+        include
     )
 
     reset.click(
         reset_img,
         [stats],
         [input_img, angle]
-    )
-
-    reset_point.click(
-        resetp,
-        [stats],
-        [statement]
     )
 
     flip.click(
@@ -243,7 +242,7 @@ with gr.Blocks() as demo:
     submit.click(
         remove_background_img,
         [stats],
-        [output_img]
+        [output_img, output_img2, output_img3, output_img4]
     )
 
     dw_size.change(
@@ -258,4 +257,3 @@ if __name__ == '__main__':
                         server_port=18401
                         # root_path="/HeadView/Web"
                         )
-
