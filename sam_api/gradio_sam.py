@@ -36,7 +36,7 @@ def input(img, user_data):
     if user_data['input_img'] is None:
         return None
 
-    return get_preview(user_data['input_img'])
+    return get_preview(user_data['input_img']), [], [], 0
 
 
 def clear(user_data):
@@ -218,7 +218,7 @@ with gr.Blocks() as demo:
     input_img.upload(
         input,
         [input_img, stats],
-        input_img
+        [input_img,include,exclude,angle]
     )
 
     input_img.clear(
