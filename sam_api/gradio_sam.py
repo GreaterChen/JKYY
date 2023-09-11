@@ -136,12 +136,11 @@ def remove_background_img(user_data):
         return None
     output, scores = remove_background_img_sam(
         user_data['size'],
-        pil2base64(np2pil(user_data['tmp_img'])),
+        user_data['tmp_img'],
         user_data['include_points'],
         user_data['exclude_points'],
-        user_data['include_area']
+        user_data['include_area'],
     )
-    print(len(output))
     for i in range(len(output)):
         output[i] = pil2np(base642pil(output[i]))
 

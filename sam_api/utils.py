@@ -7,6 +7,8 @@ from segment_anything import sam_model_registry, SamPredictor
 
 
 def get_img_data(img):
+    if str(type(img)) == "<class 'numpy.ndarray'>":
+        return img
     if img.startswith("http"):
         try:
             req = requests.get(img)
@@ -19,7 +21,7 @@ def get_img_data(img):
             image = Image.open(BytesIO(decoded_data))
         except Exception as e:
             raise ValueError("get img base64 error:{}".format(e))
-    return image
+    return pil2np(image)
 
 
 def show_points(coords, labels, ax, marker_size=375):
@@ -50,9 +52,8 @@ def remove_background_img_sam(size, img, include_point, exclude_point, include_a
     sam = sam_model_registry["vit_b"](checkpoint="../checkpoint/sam_vit_b_01ec64.pth")
     sam.to(device="cuda")
     predictor = SamPredictor(sam)
-    content = get_img_data(img)
+    image = get_img_data(img)
     # image = cv2.cvtColor(pil2np(content), cv2.COLOR_BGR2RGB)
-    image = pil2np(content)
     predictor.set_image(image)
 
     input_point = []
