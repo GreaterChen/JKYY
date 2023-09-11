@@ -151,7 +151,7 @@ def remove_background_img(user_data):
         user_data['tmp_img'],
         user_data['include_points'],
         user_data['exclude_points'],
-        user_data['include_area'],
+        user_data['include_area']
     )
     for i in range(len(output)):
         output[i] = pil2np(base642pil(output[i]))

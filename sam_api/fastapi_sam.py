@@ -20,7 +20,7 @@ class FileAccept(BaseModel):
 
 @app.post("/upload")
 async def remove_background(file: FileAccept):
-    imgs, scores = remove_background_img_sam(file.img, file.include_points, file.exclude_points,
+    imgs, scores = remove_background_img_sam(file.size, file.img, file.include_points, file.exclude_points,
                                              file.include_area)
 
     imgs = download_img(imgs, file.size)

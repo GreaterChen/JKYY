@@ -66,9 +66,10 @@ def download_img(imgs, size):
     return imgs_base64
 
 
-def remove_background_img_sam(img, include_point, exclude_point, include_area):
+def remove_background_img_sam(size, img, include_point, exclude_point, include_area):
     """
     完成抠图
+    @param size: 图像尺寸
     @param img: 输入图像
     @param include_point: 包含的点
     @param exclude_point: 不包含的点
