@@ -6,9 +6,7 @@ import gradio as gr
 import rembg
 import warnings
 
-from PIL.Image import Image
-
-from image_type import np2pil, pil2np, base642pil, pil2base64
+from image_type import np2pil, pil2np, base642pil
 from sam_api.utils import remove_background_img_sam, crop_non_white_region
 
 warnings.filterwarnings("ignore")
@@ -200,7 +198,7 @@ with gr.Blocks() as demo:
             with gr.Box():
                 with gr.Row():
                     with gr.Column():
-                        output_img = gr.Image(label='输出图像1')
+                        output_img = gr.Image(label='输出图像叠加')
                 with gr.Row():
                     dw_size = gr.Dropdown(
                         [str(500), str(800), str(1000), str(1500), str(2000)],

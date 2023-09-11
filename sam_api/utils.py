@@ -3,6 +3,7 @@ import requests
 from matplotlib import pyplot as plt
 
 from image_type import *
+from sam_api.config import sam_model_name, sam_model_path
 from segment_anything import sam_model_registry, SamPredictor
 
 
@@ -76,7 +77,7 @@ def remove_background_img_sam(size, img, include_point, exclude_point, include_a
     @param include_area: 矩形框定范围
     @return: 抠图后的图像
     """
-    sam = sam_model_registry["vit_b"](checkpoint="../checkpoint/sam_vit_b_01ec64.pth")
+    sam = sam_model_registry[sam_model_name](checkpoint=sam_model_path)
     sam.to(device="cuda")
     predictor = SamPredictor(sam)
     image = get_img_data(img)
