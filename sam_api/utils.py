@@ -98,12 +98,19 @@ def remove_background_img_sam(size, img, include_point, exclude_point, include_a
     input_label = np.array(input_label)
     include_area = np.array(include_area)
 
-    masks, scores, logits = predictor.predict(
-        point_coords=input_point,
-        point_labels=input_label,
-        # box=include_area[None, :],
-        multimask_output=True,
-    )
+    if len(include_area):
+        masks, scores, logits = predictor.predict(
+            point_coords=input_point,
+            point_labels=input_label,
+            box=include_area[None, :],
+            multimask_output=True,
+        )
+    else:
+        masks, scores, logits = predictor.predict(
+            point_coords=input_point,
+            point_labels=input_label,
+            multimask_output=True,
+        )
 
     # 添加总图
     sum_mask = np.logical_or.reduce(masks, axis=0)

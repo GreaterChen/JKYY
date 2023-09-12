@@ -66,23 +66,39 @@ def reset_img(user_data):
 
 
 def flip_img(tmp_img_angle, user_data):
+    '''
+    Flip image.
+    '''
+    # Check if input image is None
     if user_data['input_img'] is None:
+        # Return None if input image is None
         return None
 
+    # Copy input image
     img = user_data['input_img'].copy()
 
+    # Flip image
     img = cv2.flip(img, 1)
+    # Update temporary image
     user_data['tmp_img'] = img
 
+    # Get height and width of image
     h, w = img.shape[:2]
+    # Get center of rotation
     rotate_center = (w / 2, h / 2)
+    # Get rotation matrix
     M = cv2.getRotationMatrix2D(rotate_center, tmp_img_angle, 1.0)
+    # Get new width
     new_w = int(h * np.abs(M[0, 1]) + w * np.abs(M[0, 0]))
+    # Get new height
     new_h = int(h * np.abs(M[0, 0]) + w * np.abs(M[0, 1]))
+    # Set rotation matrix to 0, 0, 1
     M[0, 2] += (new_w - w) / 2
     M[1, 2] += (new_h - h) / 2
+    # Apply rotation matrix to image
     user_data['tmp_img'] = cv2.warpAffine(img, M, (new_w, new_h))
 
+    # Return preview of new image
     return get_preview(user_data['tmp_img'])
 
 
