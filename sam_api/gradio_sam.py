@@ -282,7 +282,7 @@ with gr.Blocks() as demo:
     dw_size.change(
         download_img,
         [dw_size, stats],
-        output_img
+        [output_img, output_img2, output_img3, output_img4]
     )
 
     in_or_ex.change(
