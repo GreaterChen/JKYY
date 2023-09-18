@@ -25,14 +25,19 @@ async def remove_background(file: FileAccept):
 
     imgs = download_img(imgs, file.size)
     res = {
-        "main_fig": imgs[-1],
-        "sub_figs": [
-            {
-                "img": img,
-                "score": score
-            }
-            for img, score in zip(imgs[:-1], scores[:-1])
-        ]
+        "code": 1,
+        "message": "success",
+        "data":
+        {
+            "main_fig": imgs[-1],
+            "sub_figs": [
+                {
+                    "img": img,
+                    "score": score
+                }
+                for img, score in zip(imgs[:-1], scores[:-1])
+            ]
+        }
     }
 
     return res

@@ -132,10 +132,10 @@ def get_point(evt: gr.SelectData, user_data, mode):
     img = user_data['input_img'].copy()
     if mode:
         user_data['exclude_points'].append(evt.index)
-        cv2.circle(img, evt.index, img.shape[0]//100, (0, 0, 255), -1)
+        cv2.circle(img, evt.index, img.shape[0]//70, (0, 0, 255), -1)
     else:
         user_data['include_points'].append(evt.index)
-        cv2.circle(img, evt.index, img.shape[0]//100, (255, 0, 0), -1)
+        cv2.circle(img, evt.index, img.shape[0]//70, (255, 0, 0), -1)
 
     user_data['input_img'] = img
 
@@ -275,6 +275,7 @@ with gr.Blocks() as demo:
 
     submit.click(
         remove_background_img,
+
         [stats],
         [output_img, output_img2, output_img3, output_img4]
     )
