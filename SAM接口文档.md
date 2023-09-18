@@ -3,12 +3,18 @@
 ### 项目结构
 
 segment_anything
+
 └─sam_api
-    └─config.py	设置SAM模型参数
-    └─fastapi_sam.py	基于fastapi的SAM接口
-    └─gradio_sam.py	基于gradio的SAM图形化界面
-    └─image_type.py	各种图片格式转换函数
-    └─utils.py		若干工具函数
+
+​	└─config.py	设置SAM模型参数
+
+​	└─fastapi_sam.py	基于fastapi的SAM接口
+
+​	└─gradio_sam.py	基于gradio的SAM图形化界面
+
+​	└─image_type.py	各种图片格式转换函数
+
+​	└─utils.py		若干工具函数
 
 └─checkpoint		存放模型checkpoint，需要在官方github页面中下载
 
@@ -56,12 +62,12 @@ segment_anything
             "score": score	// 置信度
         },
         {
-            "img": img,		//输出图片的base64
-            "score": score	// 置信度
+            "img": img,	
+            "score": score
         },
         {
-            "img": img,		//输出图片的base64
-            "score": score	// 置信度
+            "img": img,	
+            "score": score
         }
 	]
 }
