@@ -22,7 +22,7 @@ segment_anything
 
 1. 方法：POST
 
-2. url：/upload
+2. url：localhost:8000/upload
 
 3. 请求参数
 
